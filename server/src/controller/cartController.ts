@@ -26,11 +26,11 @@ export const addToCart = async (req: Request, res: Response) => {
         const { productId, quantity } = req.body;
 
         if (!productId || !quantity || quantity <= 0) {
-            res.status(400).json({ message: "Invalid product or quantity" })
+            return res.status(400).json({ message: "Invalid product or quantity" })
         }
         const product = await Product.findById(productId);
         if (!product) {
-            res.status(404).json({ message: "Product not Found." })
+            return res.status(404).json({ message: "Product not Found." })
         }
         //find user existing cart
         let cart = await Cart.findOne({ user: userId });

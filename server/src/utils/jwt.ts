@@ -1,14 +1,14 @@
-import jwt from "jsonwebtoken";
+import jwt  from "jsonwebtoken";
 
 interface JwtPayload{
     userId : string;
     role: string;
 }
 
-export const generateToken = (id : string)=>{
-    return jwt.sign({id},process.env.JWT_SECRET as string,{expiresIn: "7d"});
+export const generateToken = (userId : string)=>{
+    return jwt.sign({userId},process.env.JWT_SECRET as string,{expiresIn: "7d"});
 }
 
 export const verifyToken = (token : string) =>{
-    return jwt.verify(token, process.env.JWT_SECRET as string)  as JwtPayload;
+    return jwt.verify(token, process.env.JWT_SECRET as string)  as JwtPayload  ;
 }

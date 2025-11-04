@@ -48,6 +48,7 @@ export const createOrder = async (req: Request, res: Response) => {
     }
 }
 
+//get user orders
 export const getMyOrders = async (req: Request, res: Response) => {
     try {
         const orders = await Order.find({ user: req.user?._id }).populate("orderItems.product");
