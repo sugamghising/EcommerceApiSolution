@@ -1,11 +1,11 @@
-import React from "react";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { CreateProductData } from "../../api/product";
 import Button from "../common/Button";
 
 interface ProductFormProps {
   initialData?: Partial<CreateProductData>;
-  onSubmit: (data: CreateProductData) => Promise<void>;
+  onSubmit: (data: CreateProductData, imageFile?: File) => Promise<void>;
   onCancel?: () => void;
   loading?: boolean;
 }
@@ -16,6 +16,11 @@ const ProductForm: React.FC<ProductFormProps> = ({
   onCancel,
   loading = false,
 }) => {
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string>(
+    initialData?.imageUrl || ""
+  );
+
   const {
     register,
     handleSubmit,
@@ -24,8 +29,37 @@ const ProductForm: React.FC<ProductFormProps> = ({
     defaultValues: initialData,
   });
 
+  // Handle image file selection
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Validate file type
+      if (!file.type.startsWith("image/")) {
+        alert("Please select an image file");
+        return;
+      }
+      // Validate file size (5MB max)
+      if (file.size > 5 * 1024 * 1024) {
+        alert("Image size should be less than 5MB");
+        return;
+      }
+      setImageFile(file);
+      // Create preview URL
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // Handle form submission
+  const handleFormSubmit = async (data: CreateProductData) => {
+    await onSubmit(data, imageFile || undefined);
+  };
+
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
       <div>
         <label
           htmlFor="name"
@@ -136,21 +170,59 @@ const ProductForm: React.FC<ProductFormProps> = ({
 
       <div>
         <label
+          htmlFor="image"
+          className="block text-sm font-medium text-gray-700 mb-1"
+        >
+          Product Image {!initialData && "*"}
+        </label>
+        <input
+          id="image"
+          type="file"
+          accept="image/*"
+          onChange={handleImageChange}
+          className="block w-full text-sm text-gray-500
+            file:mr-4 file:py-2 file:px-4
+            file:rounded-md file:border-0
+            file:text-sm file:font-semibold
+            file:bg-primary-50 file:text-primary-700
+            hover:file:bg-primary-100
+            cursor-pointer"
+        />
+        <p className="mt-1 text-xs text-gray-500">
+          Max file size: 5MB. Supported formats: JPG, PNG, GIF, WebP
+        </p>
+
+        {/* Image Preview */}
+        {imagePreview && (
+          <div className="mt-3">
+            <p className="text-sm font-medium text-gray-700 mb-2">Preview:</p>
+            <img
+              src={imagePreview}
+              alt="Product preview"
+              className="w-32 h-32 object-cover rounded-lg border border-gray-300"
+            />
+          </div>
+        )}
+      </div>
+
+      {/* Optional: Still allow URL input as fallback */}
+      <div>
+        <label
           htmlFor="imageUrl"
           className="block text-sm font-medium text-gray-700 mb-1"
         >
-          Image URL *
+          Or Image URL (Optional)
         </label>
         <input
-          {...register("imageUrl", { required: "Image URL is required" })}
+          {...register("imageUrl")}
           id="imageUrl"
           type="url"
           className="input"
           placeholder="https://example.com/image.jpg"
         />
-        {errors.imageUrl && (
-          <p className="mt-1 text-sm text-red-600">{errors.imageUrl.message}</p>
-        )}
+        <p className="mt-1 text-xs text-gray-500">
+          If no file is uploaded, you can provide an image URL
+        </p>
       </div>
 
       <div className="flex space-x-3 pt-4">

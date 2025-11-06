@@ -25,10 +25,10 @@ const ProductManager: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleCreate = async (data: any) => {
+  const handleCreate = async (data: any, imageFile?: File) => {
     try {
       setActionLoading(true);
-      await createProduct(data);
+      await createProduct(data, imageFile);
       setIsModalOpen(false);
     } catch (error) {
       console.error("Error creating product:", error);
@@ -37,11 +37,11 @@ const ProductManager: React.FC = () => {
     }
   };
 
-  const handleUpdate = async (data: any) => {
+  const handleUpdate = async (data: any, imageFile?: File) => {
     if (!editingProduct) return;
     try {
       setActionLoading(true);
-      await updateProduct(editingProduct._id, data);
+      await updateProduct(editingProduct._id, data, imageFile);
       setIsModalOpen(false);
       setEditingProduct(null);
     } catch (error) {

@@ -14,10 +14,14 @@ interface ProductContextType {
   currentPage: number;
   fetchProducts: (filters?: ProductFilters) => Promise<void>;
   getProductById: (id: string) => Promise<Product>;
-  createProduct: (data: CreateProductData) => Promise<Product>;
+  createProduct: (
+    data: CreateProductData,
+    imageFile?: File
+  ) => Promise<Product>;
   updateProduct: (
     id: string,
-    data: Partial<CreateProductData>
+    data: Partial<CreateProductData>,
+    imageFile?: File
   ) => Promise<Product>;
   deleteProduct: (id: string) => Promise<void>;
   categories: string[];
@@ -80,11 +84,14 @@ export const ProductProvider: React.FC<ProductProviderProps> = ({
     }
   };
 
-  const createProduct = async (data: CreateProductData): Promise<Product> => {
+  const createProduct = async (
+    data: CreateProductData,
+    imageFile?: File
+  ): Promise<Product> => {
     try {
       setLoading(true);
       setError(null);
-      const product = await productAPI.createProduct(data);
+      const product = await productAPI.createProduct(data, imageFile);
       setProducts((prev) => [product, ...prev]);
       return product;
     } catch (err: any) {
@@ -100,12 +107,13 @@ export const ProductProvider: React.FC<ProductProviderProps> = ({
 
   const updateProduct = async (
     id: string,
-    data: Partial<CreateProductData>
+    data: Partial<CreateProductData>,
+    imageFile?: File
   ): Promise<Product> => {
     try {
       setLoading(true);
       setError(null);
-      const product = await productAPI.updateProduct(id, data);
+      const product = await productAPI.updateProduct(id, data, imageFile);
       setProducts((prev) => prev.map((p) => (p._id === id ? product : p)));
       return product;
     } catch (err: any) {

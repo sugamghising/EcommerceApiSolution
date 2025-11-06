@@ -65,7 +65,7 @@ export interface CreateProductData {
     price: number;
     category: string;
     stock: number;
-    imageUrl: string;
+    imageUrl?: string; // Made optional since we can use file upload
 }
 
 export const productAPI = {
@@ -101,17 +101,32 @@ export const productAPI = {
         throw new Error('Product not found');
     },
 
-    createProduct: async (data: CreateProductData): Promise<Product> => {
-        // Transform frontend data to backend format
-        const backendData = {
-            name: data.name,
-            description: data.description,
-            price: data.price,
-            category: data.category,
-            stock: data.stock,
-            image: data.imageUrl,
-        };
-        const response = await axiosInstance.post<BackendProductsResponse>('/products', backendData);
+    createProduct: async (data: CreateProductData, imageFile?: File): Promise<Product> => {
+        const formData = new FormData();
+        formData.append('name', data.name);
+        formData.append('description', data.description);
+        formData.append('price', data.price.toString());
+        formData.append('category', data.category);
+        formData.append('stock', data.stock.toString());
+
+        // If image file is provided, upload it
+        if (imageFile) {
+            formData.append('image', imageFile);
+        } else if (data.imageUrl) {
+            // Fallback to URL if provided
+            formData.append('image', data.imageUrl);
+        }
+
+        const response = await axiosInstance.post<BackendProductsResponse>(
+            '/products',
+            formData,
+            {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+            }
+        );
+
         // Backend returns { message, newProduct }
         if (response.data.newProduct) {
             return transformProduct(response.data.newProduct);
@@ -119,17 +134,33 @@ export const productAPI = {
         throw new Error('Failed to create product');
     },
 
-    updateProduct: async (id: string, data: Partial<CreateProductData>): Promise<Product> => {
-        // Transform frontend data to backend format
-        const backendData: any = {};
-        if (data.name) backendData.name = data.name;
-        if (data.description) backendData.description = data.description;
-        if (data.price) backendData.price = data.price;
-        if (data.category) backendData.category = data.category;
-        if (data.stock !== undefined) backendData.stock = data.stock;
-        if (data.imageUrl) backendData.image = data.imageUrl;
+    updateProduct: async (id: string, data: Partial<CreateProductData>, imageFile?: File): Promise<Product> => {
+        const formData = new FormData();
 
-        const response = await axiosInstance.put<BackendProductsResponse>(`/products/${id}`, backendData);
+        if (data.name) formData.append('name', data.name);
+        if (data.description) formData.append('description', data.description);
+        if (data.price) formData.append('price', data.price.toString());
+        if (data.category) formData.append('category', data.category);
+        if (data.stock !== undefined) formData.append('stock', data.stock.toString());
+
+        // If new image file is provided, upload it
+        if (imageFile) {
+            formData.append('image', imageFile);
+        } else if (data.imageUrl) {
+            // Fallback to URL if provided
+            formData.append('image', data.imageUrl);
+        }
+
+        const response = await axiosInstance.put<BackendProductsResponse>(
+            `/products/${id}`,
+            formData,
+            {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+            }
+        );
+
         // Backend returns { message, updatedProduct }
         if (response.data.updatedProduct) {
             return transformProduct(response.data.updatedProduct);

@@ -1,17 +1,24 @@
 import { Request, Response } from "express";
 import Product, { IProduct } from "../models/Product";
+import { uploadImageToCloudinary, deleteImageFromCloudinary } from "../utils/uploadToCloudinary";
+
 
 
 //Add new Product (Admin only)
 export const addProduct = async (req: Request, res: Response) => {
     try {
-        const { name, description, price, stock, category, image } = req.body;
+        const { name, description, price, stock, category } = req.body;
         if (!name || !description || !price || !category) {
             return res.status(400).json({ message: "All required field must be provided." });
         }
 
+        let imageUrl = "default-product.png";
+        if (req.file) {
+            const uploadResult = await uploadImageToCloudinary(req.file.buffer, 'products');
+            imageUrl = uploadResult.secure_url;
+        }
         const newProduct: IProduct = await Product.create({
-            name, description, price, stock, category, image
+            name, description, price, stock, category, image: imageUrl
         })
 
         res.status(201).json({ message: " New product added.", newProduct });
@@ -96,12 +103,24 @@ export const updateProduct = async (req: Request, res: Response) => {
             res.status(404).json({ message: "Product not found." })
         }
 
-        // const { name, description, price, stock, category, image } = req.body;
-        const updatedProduct = await Product.findByIdAndUpdate(productId, req.body, { new: true });
+        // Prepare update data
+        const updateData: any = { ...req.body };
 
-        res.status(200).json({ message: "Product deleted successfully.", product });
+        // If new image is uploaded, upload to Cloudinary
+        if (req.file) {
+            const uploadResult = await uploadImageToCloudinary(req.file.buffer, 'products');
+            updateData.image = uploadResult.secure_url;
+
+            // Optional: Delete old image from Cloudinary if it exists
+            // You would need to store the public_id in your product model for this
+        }
+
+
+        const updatedProduct = await Product.findByIdAndUpdate(productId, updateData, { new: true });
+
+        res.status(200).json({ message: "Product updated successfully.", updatedProduct });
     } catch (error) {
-        console.log("Error in deleteProduct", error);
+        console.log("Error in updateProduct", error);
         res.status(500).json({ message: "Server error" });
     }
 }

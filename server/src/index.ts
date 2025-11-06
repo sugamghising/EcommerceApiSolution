@@ -20,16 +20,16 @@ app.use(cors());
 app.use(express.json());
 app.use(morgan('dev'))
 
-app.get('/',(req,res)=>res.send("Hello from backend") )
+app.get('/', (req, res) => res.send("Hello from backend"))
 
 connectDb();
 
-app.use('/api/v1/users/',userRouter);
-app.use('/api/v1/products/',productRouter);
-app.use('/api/v1/cart/',cartRouter);
-app.use('/api/v1/orders/',orderRouter);
-app.use('/api/v1/payment/',paymentRouter);
+app.use('/api/v1/users/', userRouter);
+app.use('/api/v1/products/', productRouter);
+app.use('/api/v1/cart/', cartRouter);
+app.use('/api/v1/orders/', orderRouter);
+app.use('/api/v1/payment/', paymentRouter);
 
-app.listen(PORT, ()=>{
+app.listen(PORT, () => {
     console.log(`Server running at PORT ${PORT}`);
 })
